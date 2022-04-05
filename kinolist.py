@@ -1,17 +1,23 @@
-from kinopoisk_unofficial.kinopoisk_api_client import KinopoiskApiClient
-from kinopoisk_unofficial.request.staff.staff_request import StaffRequest
-from kinopoisk_unofficial.request.films.film_request import FilmRequest
-from copy import deepcopy  #копирование таблиц
+import os
+import re
+import shutil  # сохранение файла
+import sys
+from copy import deepcopy  # копирование таблиц
+
+import requests  # загрузка файла из сети
 from docx import Document  # работа с docx
 from docx.shared import Cm, Pt, RGBColor
-import requests  # загрузка файла из сети
-import shutil  # сохранение файла
-import os, sys, re
+from kinopoisk_unofficial.kinopoisk_api_client import KinopoiskApiClient
+from kinopoisk_unofficial.request.films.film_request import FilmRequest
+from kinopoisk_unofficial.request.staff.staff_request import StaffRequest
 from mutagen.mp4 import MP4, MP4Cover
+from PIL import Image
+
 import config
 
-ver = '0.3.3'
-api = config.api
+ver = '0.3.4'
+api = config.api_key
+
 
 # получение информации о фильме по kinopoisk id
 def getFilminfo(film_code, api):
@@ -34,7 +40,7 @@ def getFilminfo(film_code, api):
     filename = filename.translate(trtable)
     filmlist = [
         response_film.film.name_ru, response_film.film.year, response_film.film.rating_kinopoisk, countries,
-        response_film.film.description, response_film.film.poster_url_preview, filename
+        response_film.film.description, response_film.film.poster_url, filename
     ]
     return filmlist + stafflist
 
@@ -99,6 +105,13 @@ def wrireFilmtoTable(current_table, filminfo):
     else:
         print('Не удалось загрузить постер (' + image_url + ')')
 
+    # изменение размера постера
+    image = Image.open(file_path)
+    width, height = image.size
+    # обрезка до соотношения сторон 1x1.5
+    image = image.crop((((width - height / 1.5) / 2), 0, ((width - height / 1.5) / 2) + height / 1.5, height))
+    image.thumbnail((360, 540))
+    image.save(file_path)
     # запись постера в таблицу
     paragraph = current_table.cell(0, 0).paragraphs[1]
     run = paragraph.add_run()
@@ -149,7 +162,11 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
-print('-' * 80 + '\n' + ' ' * 18 + 'Kinolist: Программа создания списка фильмов\n' + ' ' * 38 + ver + '\n' + '-' * 80)
+terminal_size = os.get_terminal_size().columns - 1
+print('-' * (terminal_size))
+print("Kinolist: Программа создания списка фильмов".center(terminal_size, " "))
+print(ver.center(terminal_size, " "))
+print('-' * (terminal_size))
 
 # считываем значения из файла list.txt
 try:
@@ -198,7 +215,7 @@ if err > 0:
     print('Выполнено с ошибками! (' + str(err) + ')')
 else:
     print('Список создан.')
-    print('-' * 80)
+    print('-' * terminal_size)
 
 ask = str(input('Начать запись тегов? (y/n) '))
 if ask.lower() == "y":
