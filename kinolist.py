@@ -88,7 +88,6 @@ def wrireFilmtoTable(current_table, filminfo):
     run.font.name = 'Arial'
     run.font.size = Pt(10)
     run = paragraph.add_run(', '.join(filminfo[8:]))
-    # run.font.color.rgb = RGBColor(5, 99, 193)
     run.font.color.rgb = RGBColor(0, 0, 255)
     run.font.name = 'Arial'
     run.font.size = Pt(10)
