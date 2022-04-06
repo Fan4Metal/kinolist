@@ -19,6 +19,18 @@ ver = '0.3.4'
 api = config.api_key
 
 
+# проверка авторизации
+def isapiok(api):
+    try:
+        api_client = KinopoiskApiClient(api)
+        request = FilmRequest(507)
+        response = api_client.films.send_film_request(request)
+    except:
+        return False
+    else:
+        return True
+
+
 # получение информации о фильме по kinopoisk id
 def getFilminfo(film_code, api):
     api_client = KinopoiskApiClient(api)
@@ -142,6 +154,7 @@ def writeTagstoMp4(film):
         print(f'Ошибка: Файл "{file_path}" не найден!')
         return
     video = MP4(file_path)
+    video.delete() # удаление всех тегов
     video["\xa9nam"] = film[0]  # title
     video["desc"] = film[4]  # description
     video["ldes"] = film[4]  # long description
@@ -167,6 +180,12 @@ print('-' * (terminal_size))
 print("Kinolist: Программа создания списка фильмов".center(terminal_size, " "))
 print(ver.center(terminal_size, " "))
 print('-' * (terminal_size))
+
+
+if not isapiok(api):
+    print('Ошибка API!')
+    os.system('pause')
+    sys.exit()
 
 # считываем значения из файла list.txt
 try:
