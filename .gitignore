@@ -136,3 +136,10 @@ dmypy.json
 /test
 config.py
 list.docx
+*.cmd
+*.txt
+*.yaml
+*.rar
+.vscode/
+backup/
+*.yapf
