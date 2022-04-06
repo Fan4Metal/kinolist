@@ -113,7 +113,7 @@ def wrireFilmtoTable(current_table, filminfo):
         resp.raw.decode_content = True
         with open(file_path, 'wb') as f:  # открываем файл для бинарной записи
             shutil.copyfileobj(resp.raw, f)
-        print('Постер загружен:', filename)
+        # print('Постер загружен:', filename)
     else:
         print('Не удалось загрузить постер (' + image_url + ')')
 
@@ -121,7 +121,8 @@ def wrireFilmtoTable(current_table, filminfo):
     image = Image.open(file_path)
     width, height = image.size
     # обрезка до соотношения сторон 1x1.5
-    image = image.crop((((width - height / 1.5) / 2), 0, ((width - height / 1.5) / 2) + height / 1.5, height))
+    if width > (height / 1.5):
+        image = image.crop((((width - height / 1.5) / 2), 0, ((width - height / 1.5) / 2) + height / 1.5, height))
     image.thumbnail((360, 540))
     image.save(file_path)
     # запись постера в таблицу
@@ -202,16 +203,15 @@ except FileNotFoundError:
 else:
     file_list.close()
 
-file_path = resource_path('template.docx')  # определяем путь до шаблона
-
-doc = Document(file_path)  # открываем шаблон
-
-if len(film_codes) > 1:
-    cloneFirstTable(doc, len(film_codes) - 1)  # добавляем копии шаблонов таблиц
-elif len(film_codes) < 1:
+if len(film_codes) < 1:
     print('В списке 0 фильмов. Работа программы завершена.')
     os.system('pause')
     sys.exit()
+
+file_path = resource_path('template.docx')  # определяем путь до шаблона
+doc = Document(file_path)  # открываем шаблон
+if len(film_codes) > 1:
+    cloneFirstTable(doc, len(film_codes) - 1)  # добавляем копии шаблонов таблиц
 
 err = 0
 tablenum = 0
@@ -233,6 +233,7 @@ doc.save('list.docx')
 if err > 0:
     print('Выполнено с ошибками! (' + str(err) + ')')
 else:
+    print('')
     print('Список создан.')
     print('-' * terminal_size)
 
@@ -240,6 +241,7 @@ ask = str(input('Начать запись тегов? (y/n) '))
 if ask.lower() == "y":
     for film in fullfilmslist:
         writeTagstoMp4(film)
+    print('')
     print('Запись тегов завершена.')
 elif ask == '' or ask == 'n':
     print('Работа программы завершена.')
