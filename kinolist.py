@@ -1,4 +1,5 @@
 import os
+import glob
 import re
 import shutil  # сохранение файла
 import sys
@@ -10,12 +11,12 @@ from docx.shared import Cm, Pt, RGBColor
 from kinopoisk_unofficial.kinopoisk_api_client import KinopoiskApiClient
 from kinopoisk_unofficial.request.films.film_request import FilmRequest
 from kinopoisk_unofficial.request.staff.staff_request import StaffRequest
-from mutagen.mp4 import MP4, MP4Cover
-from PIL import Image
+from mutagen.mp4 import MP4, MP4Cover # работа тегами
+from PIL import Image # работа с изображениями
 
 import config
 
-ver = '0.3.4'
+ver = '0.3.5'
 api = config.api_key
 
 
@@ -154,7 +155,7 @@ def writeTagstoMp4(film):
         print(f'Ошибка: Файл "{file_path}" не найден!')
         return
     video = MP4(file_path)
-    video.delete() # удаление всех тегов
+    video.delete()  # удаление всех тегов
     video["\xa9nam"] = film[0]  # title
     video["desc"] = film[4]  # description
     video["ldes"] = film[4]  # long description
@@ -166,7 +167,8 @@ def writeTagstoMp4(film):
     print(file_path + ' - тег записан')
 
 
-# определение пути для запуска из автономного exe файла (pyinstaller cоздает временную папку, путь в _MEIPASS)
+# определение пути для запуска из автономного exe файла.
+# pyinstaller cоздает временную папку, путь в _MEIPASS
 def resource_path(relative_path):
     try:
         base_path = sys._MEIPASS
@@ -181,26 +183,32 @@ print("Kinolist: Программа создания списка фильмов
 print(ver.center(terminal_size, " "))
 print('-' * (terminal_size))
 
-
 if not isapiok(api):
     print('Ошибка API!')
     os.system('pause')
     sys.exit()
 
 # считываем значения из файла list.txt
-try:
-    file_list = open("list.txt", 'r')
+film_codes = []
+if os.path.isfile('list.txt'):
+    file_list = open('list.txt', 'r')
     lines = file_list.readlines()  # считываем все строки
-    film_codes = []
+    file_list.close()
     for line in lines:
         film_codes.append(line.strip())
     print('Найден файл "list.txt"' + ' (записей: ' + str(len(film_codes)) + ')')
-except FileNotFoundError:
+else:
     print('Ошибка: Файл "list.txt" не найден!')
     inputstr = input('Введите через пробел идентификаторы фильмов (kinopoisk id): ')
     film_codes = inputstr.split()
-else:
-    file_list.close()
+    if len(film_codes) < 1:
+        print('В списке 0 фильмов. Работа программы завершена.')
+        os.system('pause')
+        sys.exit()
+    else:
+        with open('list.txt', 'w') as f:
+            f.write('\n'.join(film_codes))
+        print('Файл "list.txt" сохранен.')
 
 if len(film_codes) < 1:
     print('В списке 0 фильмов. Работа программы завершена.')
@@ -236,6 +244,19 @@ else:
     print('Список создан.')
     print('-' * terminal_size)
 
+mp4files = glob.glob('*.mp4')
+if len(mp4files) < 1:
+    print('Файлы mp4 не найдены.')
+    print('')
+    print('Работа программы завершена.')
+    os.system('pause')
+    sys.exit()
+
+print('Найдены файлы mp4:')
+for file in mp4files:
+    print(file)
+
+print('')
 ask = str(input('Начать запись тегов? (y/n) '))
 if ask.lower() == "y":
     for film in fullfilmslist:
@@ -243,6 +264,6 @@ if ask.lower() == "y":
     print('')
     print('Запись тегов завершена.')
 elif ask == '' or ask == 'n':
-    print('Работа программы завершена.')
+    print('Отмена. Работа программы завершена.')
 os.system('pause')
 sys.exit()
