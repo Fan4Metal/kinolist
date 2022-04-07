@@ -224,6 +224,9 @@ err = 0
 tablenum = 0
 fullfilmslist = []
 for i in range(len(film_codes)):
+    if i > 20:
+        print('Ошибка! Достигнуто ограничение API - не больше 20 фильмов за раз.')
+        break
     try:
         filminfo = getFilminfo(film_codes[i], api)
         fullfilmslist.append(filminfo)
@@ -236,13 +239,26 @@ for i in range(len(film_codes)):
         print(filminfo[0] + ' - ок')
         tablenum += 1
 
-doc.save('list.docx')
+
+try:
+    doc.save('list.docx')
+except PermissionError:
+    print('Ошибка! Нет доступа к файлу list.docx. Список не создан.')
+    print('')
+    print('Работа программы завершена.')
+    os.system('pause')
+    sys.exit()
+
+
 if err > 0:
     print('Выполнено с ошибками! (' + str(err) + ')')
 else:
     print('')
     print('Список создан.')
     print('-' * terminal_size)
+
+if len(film_codes) > i:
+    print('Внимание! В файле списка присутствуют лишние пустые таблицы.')
 
 mp4files = glob.glob('*.mp4')
 if len(mp4files) < 1:
