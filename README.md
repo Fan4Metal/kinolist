@@ -53,7 +53,7 @@ template.docx
 
 Результат выполнения скрипта - файл `list.docx`:
 
-![list.docx](/screens/list.png)
+![list.docx](./screens/list_example.png)
 
 
 
