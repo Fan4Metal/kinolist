@@ -1,0 +1,5 @@
+python-docx
+kinopoisk-api-unofficial-client
+mutagen
+requests
+Pillow
