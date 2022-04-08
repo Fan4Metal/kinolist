@@ -189,8 +189,8 @@ if not isapiok(api):
 
 # считываем значения из файла list.txt
 film_codes = []
-if os.path.isfile('list.txt'):
-    file_list = open('list.txt', 'r')
+if os.path.isfile('./list.txt'):
+    file_list = open('./list.txt', 'r')
     lines = file_list.readlines()  # считываем все строки
     file_list.close()
     for line in lines:
@@ -205,7 +205,7 @@ else:
         os.system('pause')
         sys.exit()
     else:
-        with open('list.txt', 'w') as f:
+        with open('./list.txt', 'w') as f:
             f.write('\n'.join(film_codes))
         print('Файл "list.txt" сохранен.')
 
@@ -215,7 +215,15 @@ if len(film_codes) < 1:
     sys.exit()
 
 file_path = resource_path('template.docx')  # определяем путь до шаблона
-doc = Document(file_path)  # открываем шаблон
+try:
+    doc = Document(file_path)  # открываем шаблон
+except Exception:
+    print('Ошибка! Не найден шаблон template.docx. Список не создан.')
+    print('')
+    print('Работа программы завершена.')
+    os.system('pause')
+    sys.exit()
+
 if len(film_codes) > 1:
     cloneFirstTable(doc, len(film_codes) - 1)  # добавляем копии шаблонов таблиц
 
@@ -240,7 +248,7 @@ for i in range(len(film_codes)):
 
 
 try:
-    doc.save('list.docx')
+    doc.save('./list.docx')
 except PermissionError:
     print('Ошибка! Нет доступа к файлу list.docx. Список не создан.')
     print('')
