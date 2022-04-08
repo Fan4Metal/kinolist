@@ -1,6 +1,8 @@
+from operator import truediv
 import os
 import glob
 import re
+from secrets import choice
 import shutil  # сохранение файла
 import sys
 from copy import deepcopy  # копирование таблиц
@@ -11,6 +13,7 @@ from docx.shared import Cm, Pt, RGBColor
 from kinopoisk_unofficial.kinopoisk_api_client import KinopoiskApiClient
 from kinopoisk_unofficial.request.films.film_request import FilmRequest
 from kinopoisk_unofficial.request.staff.staff_request import StaffRequest
+from kinopoisk.movie import Movie # api для поиска фильмов
 from mutagen.mp4 import MP4, MP4Cover # работа тегами
 from PIL import Image # работа с изображениями
 
@@ -176,6 +179,32 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
+def inputkinopoiskid(choice):
+    if choice == 1:
+        filmsearch = []
+        while True:
+            search = input('Введите название фильма и год выпуска или enter чтобы продолжить: ')
+            if search == '':
+                return filmsearch
+            movie_list = Movie.objects.search(search)   
+            id = str(movie_list[0].id)
+            print(movie_list[0])
+            print(f"Kinopoisk_id: {id}")
+            choice_1 = input('Варианты: Добавить в список (1), новый поиск (2), закончить и продолжить (enter): ')
+            if choice_1 == '1':
+                filmsearch.append(id)
+                print(filmsearch)
+            elif choice_1 == '2':
+                continue
+            elif choice_1 == '':
+                print(filmsearch)
+                return filmsearch
+   
+    elif choice == 2:
+        inputstr = input('Введите через пробел идентификаторы фильмов (kinopoisk id): ')
+        return  inputstr.split()
+
+
 terminal_size = os.get_terminal_size().columns - 1
 print('-' * (terminal_size))
 print("Kinolist: Программа создания списка фильмов".center(terminal_size, " "))
@@ -195,11 +224,31 @@ if os.path.isfile('./list.txt'):
     file_list.close()
     for line in lines:
         film_codes.append(line.strip())
+    if len(film_codes) < 1:
+        print('В списке 0 фильмов. Работа программы завершена.')
+        os.system('pause')
+        sys.exit()
     print('Найден файл "list.txt"' + ' (записей: ' + str(len(film_codes)) + ')')
 else:
     print('Ошибка: Файл "list.txt" не найден!')
-    inputstr = input('Введите через пробел идентификаторы фильмов (kinopoisk id): ')
-    film_codes = inputstr.split()
+    while True:
+        choice = input('Выберите режим: Поиск фильмов по названию (1); ручной ввод kinopoisk_id (2); enter чтобы выйти: ')
+        if choice == "1":
+            print('выбор 1')
+            film_codes = inputkinopoiskid(1)
+            print(film_codes)
+            break
+        elif choice == "2":
+            print('выбор 2')
+            film_codes = inputkinopoiskid(2)
+            print(film_codes)
+            break
+        elif choice == "":
+            print('')
+            print('Работа программы завершена.')
+            os.system('pause')
+            sys.exit()
+
     if len(film_codes) < 1:
         print('В списке 0 фильмов. Работа программы завершена.')
         os.system('pause')
@@ -208,11 +257,6 @@ else:
         with open('./list.txt', 'w') as f:
             f.write('\n'.join(film_codes))
         print('Файл "list.txt" сохранен.')
-
-if len(film_codes) < 1:
-    print('В списке 0 фильмов. Работа программы завершена.')
-    os.system('pause')
-    sys.exit()
 
 file_path = resource_path('template.docx')  # определяем путь до шаблона
 try:
@@ -246,7 +290,6 @@ for i in range(len(film_codes)):
         print(filminfo[0] + ' - ок')
         tablenum += 1
 
-
 try:
     doc.save('./list.docx')
 except PermissionError:
@@ -255,7 +298,6 @@ except PermissionError:
     print('Работа программы завершена.')
     os.system('pause')
     sys.exit()
-
 
 if err > 0:
     print('Выполнено с ошибками! (' + str(err) + ')')
@@ -278,6 +320,8 @@ if len(mp4files) < 1:
 print('Найдены файлы mp4:')
 for file in mp4files:
     print(file)
+
+sys.exit()
 
 print('')
 ask = str(input('Начать запись тегов? (y/n) '))
