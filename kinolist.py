@@ -16,7 +16,7 @@ from PIL import Image # работа с изображениями
 
 import config
 
-ver = '0.3.5'
+ver = '0.3.6'
 api = config.api_key
 
 

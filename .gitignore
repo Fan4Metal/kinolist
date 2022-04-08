@@ -135,16 +135,19 @@ dmypy.json
 # test folder  
 /test
 config.py
+.vscode/
+backup/
+
+
 *.cmd
 *.yaml
 *.rar
-.vscode/
-backup/
 *.yapf
 *.txt
-
+*.zip
 list*
 
 # exlude
 !requirements.txt
 !list_example.png
+
