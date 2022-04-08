@@ -59,7 +59,7 @@ def getFilminfo(film_code, api):
 
 
 # заполнение таблицы в docx файле
-def wrireFilmtoTable(current_table, filminfo):
+def writeFilmtoTable(current_table, filminfo):
     paragraph = current_table.cell(0, 1).paragraphs[0]  # название фильма + рейтинг
     run = paragraph.add_run(str(filminfo[0]) + ' - ' + 'Кинопоиск ' + str(filminfo[2]))
     run.font.name = 'Arial'
@@ -139,12 +139,11 @@ def copy_table_after(table, paragraph):
 
 
 # клонирует первую таблицу в документе num раз
-def cloneFirstTable(document, num):
+def cloneFirstTable(document:Document, num):
     template = document.tables[0]
-    paragraph = document.add_paragraph()
+    paragraph = document.paragraphs[0]
     for i in range(num):
         copy_table_after(template, paragraph)
-        paragraph = document.add_paragraph()
         paragraph = document.add_paragraph()
 
 
@@ -235,7 +234,7 @@ for i in range(len(film_codes)):
         err += 1
     else:
         current_table = doc.tables[tablenum]
-        wrireFilmtoTable(current_table, filminfo)
+        writeFilmtoTable(current_table, filminfo)
         print(filminfo[0] + ' - ок')
         tablenum += 1
 
@@ -257,7 +256,7 @@ else:
     print('Список создан.')
     print('-' * terminal_size)
 
-if len(film_codes) > i:
+if len(film_codes) - 1 > i:
     print('Внимание! В файле списка присутствуют лишние пустые таблицы.')
 
 mp4files = glob.glob('*.mp4')
