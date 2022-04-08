@@ -142,7 +142,9 @@ config.py
 backup/
 *.yapf
 *.txt
+
 list*
 
 # exlude
 !requirements.txt
+!list_example.png
