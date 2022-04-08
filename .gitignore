@@ -135,11 +135,14 @@ dmypy.json
 # test folder  
 /test
 config.py
-list.docx
 *.cmd
-*.txt
 *.yaml
 *.rar
 .vscode/
 backup/
 *.yapf
+*.txt
+list*
+
+# exlude
+!requirements.txt
