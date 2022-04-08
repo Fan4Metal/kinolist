@@ -1,20 +1,20 @@
 # Kinolist
 
-Kinolist это скрипт на Python для быстрого создания списка фильмов в вормате `docx`. Также позволяет прописывать теги в видеофайлы `mp4` по данному списку.
+Kinolist это скрипт на Python для быстрого создания списка фильмов в формате `docx`. Также позволяет прописывать теги в видеофайлы `mp4` по данному списку.
 
-* Информацию о фильмах получает с сайта [Kinopoisk.ru](https://www.kinopoisk.ru) используя [неофициальный API](https://kinopoiskapiunofficial.tech).
+* Информацию о фильмах получает с сайта [Kinopoisk.ru](https://www.kinopoisk.ru), используя [неофициальный API](https://kinopoiskapiunofficial.tech).
 * Для взаимодействия с неофициальный API используется модуль [inopoisk-api-unofficial-client](https://github.com/masterWeber/kinopoisk-api-unofficial-client)
-* Для создания и редактирования файлов `docx` используется библиотека [python-docx](https://github.com/python-openxml/python-docx)
+* Редактирование файлов `docx` производится помощью библиотеки [python-docx](https://github.com/python-openxml/python-docx)
 * Для записи теков применяется библиотека [mutagen](https://mutagen.readthedocs.io/)
 
-## Настройка и подготовка
+## Настройка и подготовка файлов
 
 ### 1. Установка зависимостей
     pip install -r requirements.txt 
 
 ### 2. Получение и установка api-key
 Для получения токена необходима регистрация на сайте
-[kinopoiskapiunofficial.tech](hrrps://kinopoiskapiunofficial.tech). После регистрации перейдите в
+[kinopoiskapiunofficial.tech](https://kinopoiskapiunofficial.tech). После регистрации перейдите в
 настройки своего профиля и сохраните токен. После этого необходимо создать модуль `config.py` и прописать свой api-key:
 
     api_key = 'your api key'
