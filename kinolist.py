@@ -1,4 +1,3 @@
-from operator import truediv
 import os
 import glob
 import re
@@ -16,12 +15,15 @@ from kinopoisk_unofficial.request.staff.staff_request import StaffRequest
 from kinopoisk.movie import Movie  # api для поиска фильмов
 from mutagen.mp4 import MP4, MP4Cover  # работа тегами
 from PIL import Image  # работа с изображениями
+from rich import print
+from rich.panel import Panel
+from rich.console import Console
 
 import config
 
 ver = '0.4.1'
 api = config.api_key
-
+console = Console()
 
 # проверка авторизации
 def isapiok(api):
@@ -35,8 +37,19 @@ def isapiok(api):
         return True
 
 
-# получение информации о фильме по kinopoisk id
+# Получение информации о фильме по kinopoisk id
 def getFilminfo(film_code, api):
+    '''
+    0 - название фильма
+    1 - год
+    2 - рейтинг
+    3 - страны
+    4 - описание
+    5 - ссылка на постер
+    6 - имя файла без расширения
+    7:17 - режиссер + 10 актеров 
+    '''
+
     api_client = KinopoiskApiClient(api)
     request_staff = StaffRequest(film_code)
     response_staff = api_client.staff.send_staff_request(request_staff)
@@ -116,9 +129,8 @@ def writeFilmtoTable(current_table, filminfo):
         resp.raw.decode_content = True
         with open(file_path, 'wb') as f:  # открываем файл для бинарной записи
             shutil.copyfileobj(resp.raw, f)
-        # print('Постер загружен:', filename)
     else:
-        print('Не удалось загрузить постер (' + image_url + ')')
+        print(f'Не удалось загрузить постер ({image_url})')
 
     # изменение размера постера
     image = Image.open(file_path)
@@ -183,38 +195,41 @@ def inputkinopoiskid(choice):
     if choice == 1:
         filmsearch = []
         while True:
-            search = input('Введите название фильма и год выпуска или enter чтобы продолжить: ')
+            search = console.input('Введите название фильма и год выпуска или enter чтобы продолжить: ')
             if search == '':
                 return filmsearch
-            movie_list = Movie.objects.search(search)
-            if len(movie_list) < 1:
-                print('Фильм не найден.')
+            try:
+                movie_list = Movie.objects.search(search)
+            except Exception:
+                print('[red]Фильм не найден, возникла ошибка!')
                 continue
-            id = str(movie_list[0].id)
-            print(movie_list[0])
-            print(f"Kinopoisk_id: {id}")
-            choice_1 = input('Варианты: Добавить в список (1), новый поиск (2), закончить и продолжить (enter): ')
-            if choice_1 == '1':
-                filmsearch.append(id)
-                # print(filmsearch)
-            elif choice_1 == '2':
-                continue
-            elif choice_1 == '':
-                # print(filmsearch)
-                return filmsearch
+            else:
+                if len(movie_list) < 1:
+                    print('Фильм не найден.')
+                    continue
+                id = str(movie_list[0].id)
+                print(f'[white]{movie_list[0]}')
+                print(f"[white]Kinopoisk_id: {id}")
+                choice_1 = console.input('[white]Варианты: Добавить в список ([b]1[/b]), новый поиск ([b]2[/b]), закончить и продолжить ([b]enter[/b]): ')
+                if choice_1 == '1':
+                    filmsearch.append(id)
+                    # print(filmsearch)
+                elif choice_1 == '2':
+                    continue
+                elif choice_1 == '':
+                    return filmsearch
     elif choice == 2:
-        inputstr = input('Введите через пробел идентификаторы фильмов (kinopoisk id): ')
+        inputstr = console.input('Введите через пробел идентификаторы фильмов ([b]kinopoisk id[/b]): ')
         return inputstr.split()
 
 
 terminal_size = os.get_terminal_size().columns - 1
-print('-' * (terminal_size))
-print("Kinolist: Программа создания списка фильмов".center(terminal_size, " "))
-print(ver.center(terminal_size, " "))
-print('-' * (terminal_size))
+print(Panel(
+    "Kinolist: Программа создания списка фильмов".center(terminal_size, " ") + '\n' +
+     ver.center(terminal_size, " ")))
 
 if not isapiok(api):
-    print('Ошибка API!')
+    print('[red]Ошибка API!')
     os.system('pause')
     sys.exit()
 
@@ -230,12 +245,12 @@ if os.path.isfile('./list.txt'):
         print('В списке 0 фильмов. Работа программы завершена.')
         os.system('pause')
         sys.exit()
-    print('Найден файл "list.txt"' + ' (записей: ' + str(len(film_codes)) + ')')
+    print(f'Найден файл "list.txt" (записей: {len(film_codes)})')
 else:
     print('Ошибка: Файл "list.txt" не найден!')
     while True:
-        choice = input(
-            'Выберите режим: Поиск фильмов по названию (1); ручной ввод kinopoisk_id (2); enter чтобы выйти: ')
+        choice = console.input(
+            '[white]Выберите режим: Поиск фильмов по названию ([b]1[/b]); ручной ввод kinopoisk_id ([b]2[/b]); [b]enter[/b] чтобы выйти: ')
         if choice == "1":
             film_codes = inputkinopoiskid(1)
             break
@@ -261,7 +276,7 @@ file_path = resource_path('template.docx')  # определяем путь до
 try:
     doc = Document(file_path)  # открываем шаблон
 except Exception:
-    print('Ошибка! Не найден шаблон template.docx. Список не создан.')
+    print('[red]Ошибка! Не найден шаблон "template.docx". Список не создан.')
     print('')
     print('Работа программы завершена.')
     os.system('pause')
@@ -275,38 +290,38 @@ tablenum = 0
 fullfilmslist = []
 for i in range(len(film_codes)):
     if i > 20:
-        print('Ошибка! Достигнуто ограничение API - не больше 20 фильмов за раз.')
+        print('[red]Ошибка! Достигнуто ограничение API - не больше 20 фильмов за раз.')
         break
     try:
         filminfo = getFilminfo(film_codes[i], api)
         fullfilmslist.append(filminfo)
     except:
-        print(film_codes[i] + ' - ошибка')
+        print(f'[bold]{film_codes[i]} - ошибка[/bold]')
+        # print(str(film_codes[i]) + ' - ошибка')
         err += 1
     else:
         current_table = doc.tables[tablenum]
         writeFilmtoTable(current_table, filminfo)
-        print(filminfo[0] + ' - ок')
+        print(f'{filminfo[0]} - [green]ок')
         tablenum += 1
 
 try:
     doc.save('./list.docx')
 except PermissionError:
-    print('Ошибка! Нет доступа к файлу list.docx. Список не создан.')
+    print('[red]Ошибка! Нет доступа к файлу list.docx. Список не создан.')
     print('')
     print('Работа программы завершена.')
     os.system('pause')
     sys.exit()
 
 if err > 0:
-    print('Выполнено с ошибками! (' + str(err) + ')')
+    print(f'[red]Выполнено с ошибками! ({err})')
+    print('Внимание! В файле списка присутствуют лишние пустые таблицы.')
 else:
     print('')
     print('Список создан.')
-    print('-' * terminal_size)
 
-if len(film_codes) - 1 > i:
-    print('Внимание! В файле списка присутствуют лишние пустые таблицы.')
+console.rule(style='white')
 
 mp4files = glob.glob('*.mp4')
 if len(mp4files) < 1:
@@ -316,20 +331,20 @@ if len(mp4files) < 1:
     os.system('pause')
     sys.exit()
 
-sys.exit()
+# sys.exit()
 
 # запись тегов
 print('Найдены файлы mp4:')
 for file in mp4files:
-    print(file)
+    print(f'"{file}"')
 print('')
-ask = str(input('Начать запись тегов? (y/n) '))
-if ask.lower() == "y":
+ask = str(console.input('Начать запись тегов? (y,1/n,2) '))
+if ask.lower() == "y" or ask == "1":
     for film in fullfilmslist:
         writeTagstoMp4(film)
     print('')
     print('Запись тегов завершена.')
-elif ask == '' or ask == 'n':
+elif ask == '' or ask == 'n' or ask == '2':
     print('Отмена. Работа программы завершена.')
 os.system('pause')
 sys.exit()

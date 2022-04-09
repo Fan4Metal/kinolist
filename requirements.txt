@@ -4,3 +4,4 @@ kinopoiskpy
 mutagen
 requests
 Pillow
+rich
