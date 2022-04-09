@@ -1,7 +1,6 @@
 import os
 import glob
 import re
-from secrets import choice
 import shutil  # сохранение файла
 import sys
 from copy import deepcopy  # копирование таблиц
@@ -24,6 +23,7 @@ import config
 ver = '0.4.1'
 api = config.api_key
 console = Console()
+
 
 # проверка авторизации
 def isapiok(api):
@@ -181,9 +181,12 @@ def writeTagstoMp4(film):
     print(file_path + ' - тег записан')
 
 
-# определение пути для запуска из автономного exe файла.
-# pyinstaller cоздает временную папку, путь в _MEIPASS
 def resource_path(relative_path):
+    '''
+    Определение пути для запуска из автономного exe файла.
+    pyinstaller cоздает временную папку, путь в _MEIPASS
+    '''
+
     try:
         base_path = sys._MEIPASS
     except Exception:
@@ -210,7 +213,9 @@ def inputkinopoiskid(choice):
                 id = str(movie_list[0].id)
                 print(f'[white]{movie_list[0]}')
                 print(f"[white]Kinopoisk_id: {id}")
-                choice_1 = console.input('[white]Варианты: Добавить в список ([b]1[/b]), новый поиск ([b]2[/b]), закончить и продолжить ([b]enter[/b]): ')
+                choice_1 = console.input(
+                    '[white]Варианты: Добавить в список ([b]1[/b]), новый поиск ([b]2[/b]), закончить и продолжить ([b]enter[/b]): '
+                )
                 if choice_1 == '1':
                     filmsearch.append(id)
                     # print(filmsearch)
@@ -224,9 +229,9 @@ def inputkinopoiskid(choice):
 
 
 terminal_size = os.get_terminal_size().columns - 1
-print(Panel(
-    "Kinolist: Программа создания списка фильмов".center(terminal_size, " ") + '\n' +
-     ver.center(terminal_size, " ")))
+print(
+    Panel("Kinolist: Программа создания списка фильмов".center(terminal_size, " ") + '\n' +
+          ver.center(terminal_size, " ")))
 
 if not isapiok(api):
     print('[red]Ошибка API!')
@@ -247,10 +252,11 @@ if os.path.isfile('./list.txt'):
         sys.exit()
     print(f'Найден файл "list.txt" (записей: {len(film_codes)})')
 else:
-    print('Ошибка: Файл "list.txt" не найден!')
+    print('Файл "list.txt" не найден!')
     while True:
         choice = console.input(
-            '[white]Выберите режим: Поиск фильмов по названию ([b]1[/b]); ручной ввод kinopoisk_id ([b]2[/b]); [b]enter[/b] чтобы выйти: ')
+            '[white]Выберите режим: Поиск фильмов по названию ([b]1[/b]); ручной ввод kinopoisk_id ([b]2[/b]); [b]enter[/b] чтобы выйти: '
+        )
         if choice == "1":
             film_codes = inputkinopoiskid(1)
             break
@@ -331,14 +337,12 @@ if len(mp4files) < 1:
     os.system('pause')
     sys.exit()
 
-# sys.exit()
-
 # запись тегов
 print('Найдены файлы mp4:')
 for file in mp4files:
     print(f'"{file}"')
 print('')
-ask = str(console.input('Начать запись тегов? (y,1/n,2) '))
+ask = str(console.input('Начать запись тегов? [b](y,1/n,2) '))
 if ask.lower() == "y" or ask == "1":
     for film in fullfilmslist:
         writeTagstoMp4(film)
