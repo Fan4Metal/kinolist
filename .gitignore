@@ -131,6 +131,7 @@ dmypy.json
 # Video, photo
 *.mp4
 *.jpg
+*.png
 
 # test folder  
 /test

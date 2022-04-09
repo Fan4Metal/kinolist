@@ -139,7 +139,9 @@ def writeFilmtoTable(current_table, filminfo):
     if width > (height / 1.5):
         image = image.crop((((width - height / 1.5) / 2), 0, ((width - height / 1.5) / 2) + height / 1.5, height))
     image.thumbnail((360, 540))
-    image.save(file_path)
+    rgb_image = image.convert('RGB') # для исправление возможной ошибки "OSError: cannot write mode RGBA as JPEG"
+    rgb_image.save(file_path)
+
     # запись постера в таблицу
     paragraph = current_table.cell(0, 0).paragraphs[1]
     run = paragraph.add_run()
