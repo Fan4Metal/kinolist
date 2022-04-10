@@ -55,7 +55,11 @@ def getFilminfo(film_code, api):
     response_staff = api_client.staff.send_staff_request(request_staff)
     stafflist = []
     for i in range(0, 11):  # загружаем 11 персоналий (режиссер + 10 актеров)
-        stafflist.append(response_staff.items[i].name_ru)
+        if response_staff.items[i].name_ru == '':
+            stafflist.append(response_staff.items[i].name_en)
+        else:
+            stafflist.append(response_staff.items[i].name_ru)
+
     request_film = FilmRequest(film_code)
     response_film = api_client.films.send_film_request(request_film)
 
@@ -139,7 +143,7 @@ def writeFilmtoTable(current_table, filminfo):
     if width > (height / 1.5):
         image = image.crop((((width - height / 1.5) / 2), 0, ((width - height / 1.5) / 2) + height / 1.5, height))
     image.thumbnail((360, 540))
-    rgb_image = image.convert('RGB') # для исправление возможной ошибки "OSError: cannot write mode RGBA as JPEG"
+    rgb_image = image.convert('RGB')  # для исправление возможной ошибки "OSError: cannot write mode RGBA as JPEG"
     rgb_image.save(file_path)
 
     # запись постера в таблицу
@@ -257,7 +261,7 @@ else:
     print('Файл "list.txt" не найден!')
     while True:
         choice = console.input(
-            '[white]Выберите режим: Поиск фильмов по названию ([b]1[/b]); ручной ввод kinopoisk_id ([b]2[/b]); [b]enter[/b] чтобы выйти: '
+            '[white]Выберите режим: Поиск фильмов по названию ([b]1[/b]); ручной ввод kinopoisk_id ([b]2[/b]); [b]Enter[/b] чтобы выйти: '
         )
         if choice == "1":
             film_codes = inputkinopoiskid(1)
@@ -344,7 +348,7 @@ print('Найдены файлы mp4:')
 for file in mp4files:
     print(f'"{file}"')
 print('')
-ask = str(console.input('Начать запись тегов? [b](y,1/n,2) '))
+ask = str(console.input('[white]Начать запись тегов? [b](y,1/n,2) '))
 if ask.lower() == "y" or ask == "1":
     for film in fullfilmslist:
         writeTagstoMp4(film)

@@ -2,8 +2,9 @@
 
 Kinolist это скрипт на Python для быстрого создания списка фильмов в формате `docx`. Также позволяет прописывать теги в видеофайлы `mp4` по данному списку.
 
-* Информацию о фильмах получает с сайта [Kinopoisk.ru](https://www.kinopoisk.ru), используя [неофициальный API](https://kinopoiskapiunofficial.tech).
-* Для взаимодействия с неофициальный API используется модуль [inopoisk-api-unofficial-client](https://github.com/masterWeber/kinopoisk-api-unofficial-client)
+* Информацию о фильмах получает с сайта [Kinopoisk.ru](https://www.kinopoisk.ru), используя [неофициальный API](https://kinopoiskapiunofficial.tech)
+* Для взаимодействия с неофициальный API используется модуль [kinopoisk-api-unofficial-client](https://github.com/masterWeber/kinopoisk-api-unofficial-client)
+* При отсутствии файла списка `list.txt` поиск идентификаторов `kinopoisk_id` по названию фильма выполняется с помощью библиотеки [kinopoiskpy](https://github.com/ramusus/kinopoiskpy)
 * Редактирование файлов `docx` производится помощью библиотеки [python-docx](https://github.com/python-openxml/python-docx)
 * Для записи тегов применяется библиотека [mutagen](https://mutagen.readthedocs.io/)
 
