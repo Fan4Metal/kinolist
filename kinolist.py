@@ -20,7 +20,7 @@ from rich.console import Console
 
 import config
 
-ver = '0.4.1'
+ver = '0.4.2'
 api = config.api_key
 console = Console()
 
