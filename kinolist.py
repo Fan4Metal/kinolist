@@ -69,7 +69,7 @@ def getFilminfo(film_code, api):
     # имя файла
     filename = response_film.film.name_ru
     # очистка имени файла от запрещенных символов
-    trtable = filename.maketrans("", "", '\/:*?"<>')
+    trtable = filename.maketrans('', '', '\/:*?"<>')
     filename = filename.translate(trtable)
     filmlist = [
         response_film.film.name_ru, response_film.film.year, response_film.film.rating_kinopoisk, countries,
