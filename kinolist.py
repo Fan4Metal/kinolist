@@ -36,6 +36,7 @@ def isapiok(api):
     else:
         return True
 
+
 # Получение информации о фильме по kinopoisk id
 def getFilminfo(film_code, api):
     '''
