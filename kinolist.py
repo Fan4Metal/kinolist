@@ -20,7 +20,7 @@ from rich.console import Console
 
 import config
 
-ver = '0.4.2'
+ver = '0.4.3'
 api = config.api_key
 console = Console()
 
@@ -29,7 +29,7 @@ console = Console()
 def isapiok(api):
     try:
         api_client = KinopoiskApiClient(api)
-        request = FilmRequest(507)
+        request = FilmRequest(328)
         response = api_client.films.send_film_request(request)
     except:
         return False
@@ -224,7 +224,6 @@ def inputkinopoiskid(choice):
                 )
                 if choice_1 == '1':
                     filmsearch.append(id)
-                    # print(filmsearch)
                 elif choice_1 == '2':
                     continue
                 elif choice_1 == '':
@@ -241,6 +240,16 @@ print(
 
 if not isapiok(api):
     print('[red]Ошибка API!')
+    os.system('pause')
+    sys.exit()
+
+file_path = resource_path('template.docx')  # определяем путь до шаблона
+try:
+    doc = Document(file_path)  # открываем шаблон
+except Exception:
+    print('[red]Ошибка! Не найден шаблон "template.docx". Список не создан.')
+    print('')
+    print('Работа программы завершена.')
     os.system('pause')
     sys.exit()
 
@@ -284,21 +293,7 @@ else:
             f.write('\n'.join(film_codes))
         print('Файл "list.txt" сохранен.')
 
-file_path = resource_path('template.docx')  # определяем путь до шаблона
-try:
-    doc = Document(file_path)  # открываем шаблон
-except Exception:
-    print('[red]Ошибка! Не найден шаблон "template.docx". Список не создан.')
-    print('')
-    print('Работа программы завершена.')
-    os.system('pause')
-    sys.exit()
-
-if len(film_codes) > 1:
-    cloneFirstTable(doc, len(film_codes) - 1)  # добавляем копии шаблонов таблиц
-
 err = 0
-tablenum = 0
 fullfilmslist = []
 for i in range(len(film_codes)):
     if i > 20:
@@ -309,13 +304,25 @@ for i in range(len(film_codes)):
         fullfilmslist.append(filminfo)
     except:
         print(f'[bold]{film_codes[i]} - ошибка[/bold]')
-        # print(str(film_codes[i]) + ' - ошибка')
         err += 1
     else:
-        current_table = doc.tables[tablenum]
-        writeFilmtoTable(current_table, filminfo)
-        print(f'{filminfo[0]} - [green]ок')
-        tablenum += 1
+        continue
+
+tablenum = len(fullfilmslist)
+if tablenum > 1:
+    cloneFirstTable(doc, tablenum - 1)  # добавляем копии шаблонов таблиц
+elif tablenum < 1:
+    print('[red]Ошибка! Нет фильмов для записи. Список не создан.')
+    print('')
+    print('Работа программы завершена.')
+    os.system('pause')
+    sys.exit()
+
+# запись информации в таблицы
+for i in range(tablenum):
+    current_table = doc.tables[i]
+    writeFilmtoTable(current_table, fullfilmslist[i])
+    print(f'{fullfilmslist[i][0]} - [green]ок')
 
 try:
     doc.save('./list.docx')
@@ -328,10 +335,8 @@ except PermissionError:
 
 if err > 0:
     print(f'[red]Выполнено с ошибками! ({err})')
-    print('Внимание! В файле списка присутствуют лишние пустые таблицы.')
-else:
-    print('')
-    print('Список создан.')
+print('')
+print('Список создан.')
 
 console.rule(style='white')
 
