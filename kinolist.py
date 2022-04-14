@@ -36,7 +36,6 @@ def isapiok(api):
     else:
         return True
 
-
 # Получение информации о фильме по kinopoisk id
 def getFilminfo(film_code, api):
     '''
@@ -204,7 +203,7 @@ def inputkinopoiskid(choice):
     if choice == 1:
         filmsearch = []
         while True:
-            search = console.input('Введите название фильма и год выпуска или enter чтобы продолжить: ')
+            search = console.input('Введите название фильма и год выпуска или [b]Enter[/b] чтобы продолжить: ')
             if search == '':
                 return filmsearch
             try:
@@ -220,7 +219,7 @@ def inputkinopoiskid(choice):
                 print(f'[white]{movie_list[0]}')
                 print(f"[white]Kinopoisk_id: {id}")
                 choice_1 = console.input(
-                    '[white]Варианты: Добавить в список ([b]1[/b]), новый поиск ([b]2[/b]), закончить и продолжить ([b]enter[/b]): '
+                    '[white]Варианты: Добавить в список ([b]1[/b]), новый поиск ([b]2[/b]), закончить и продолжить ([b]Enter[/b]): '
                 )
                 if choice_1 == '1':
                     filmsearch.append(id)
@@ -327,7 +326,7 @@ for i in range(tablenum):
 try:
     doc.save('./list.docx')
 except PermissionError:
-    print('[red]Ошибка! Нет доступа к файлу list.docx. Список не создан.')
+    print('[red]Ошибка! Нет доступа к файлу "list.docx". Список не создан.')
     print('')
     print('Работа программы завершена.')
     os.system('pause')
