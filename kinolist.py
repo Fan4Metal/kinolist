@@ -20,13 +20,13 @@ from rich.console import Console
 
 import config
 
-ver = '0.4.3'
+ver = '0.4.4'
 api = config.api_key
 console = Console()
 
 
-# проверка авторизации
 def isapiok(api):
+    '''Проверка авторизации'''
     try:
         api_client = KinopoiskApiClient(api)
         request = FilmRequest(328)
@@ -52,7 +52,6 @@ def getFilminfo(film_code, api):
             6 - имя файла без расширения
             7:17 - режиссер + 10 актеров 
     '''
-
     api_client = KinopoiskApiClient(api)
     request_staff = StaffRequest(film_code)
     response_staff = api_client.staff.send_staff_request(request_staff)
@@ -82,11 +81,7 @@ def getFilminfo(film_code, api):
 
 
 def writeFilmtoTable(current_table, filminfo):
-    '''
-    Заполнение таблицы в docx файле.
-    
-    '''
-
+    '''Заполнение таблицы в docx файле docx'''
     paragraph = current_table.cell(0, 1).paragraphs[0]  # название фильма + рейтинг
     run = paragraph.add_run(str(filminfo[0]) + ' - ' + 'Кинопоиск ' + str(filminfo[2]))
     run.font.name = 'Arial'
@@ -159,15 +154,16 @@ def writeFilmtoTable(current_table, filminfo):
     run.add_picture(file_path, width=Cm(7))
 
 
-# копирование таблицы в указанный параграф
 def copy_table_after(table, paragraph):
+    '''Копирование таблицы в указанный параграф'''
     tbl, p = table._tbl, paragraph._p
     new_tbl = deepcopy(tbl)
     p.addnext(new_tbl)
 
 
-# клонирует первую таблицу в документе num раз
+#
 def cloneFirstTable(document: Document, num):
+    '''Клонирует первую таблицу в документе num раз'''
     template = document.tables[0]
     paragraph = document.paragraphs[0]
     for i in range(num):
@@ -175,8 +171,8 @@ def cloneFirstTable(document: Document, num):
         paragraph = document.add_paragraph()
 
 
-# запись тегов в mp4 файл
 def writeTagstoMp4(film):
+    '''Запись тегов в файл mp4'''
     file_path = str(film[6] + '.mp4')
     if not os.path.isfile(file_path):
         print(f'Ошибка: Файл "{file_path}" не найден!')
@@ -200,7 +196,6 @@ def resource_path(relative_path):
     
     Pyinstaller cоздает временную папку, путь в _MEIPASS.
     '''
-
     try:
         base_path = sys._MEIPASS
     except Exception:
@@ -209,6 +204,7 @@ def resource_path(relative_path):
 
 
 def inputkinopoiskid(choice):
+    '''Функция поиска kinopoisk id фильмов несколькими способами'''
     if choice == 1:
         filmsearch = []
         while True:
@@ -257,10 +253,9 @@ def inputkinopoiskid(choice):
                     print('Фильм не найден.')
                     continue
                 id = str(movie_list[0].id)
-                print(f'{movie_list[0]}, kinopoisk id: {id}')
+                print(f'Найден фильм {movie_list[0]}, kinopoisk id: {id}')
                 filmsearch.append(id)
         return filmsearch
-        
 
 
 terminal_size = os.get_terminal_size().columns - 1
