@@ -40,14 +40,17 @@ def isapiok(api):
 # Получение информации о фильме по kinopoisk id
 def getFilminfo(film_code, api):
     '''
-    0 - название фильма
-    1 - год
-    2 - рейтинг
-    3 - страны
-    4 - описание
-    5 - ссылка на постер
-    6 - имя файла без расширения
-    7:17 - режиссер + 10 актеров 
+    Получение информации о фильме с помощью kinopoisk_api_client
+    
+    Элементы списка:    
+            0 - название фильма
+            1 - год
+            2 - рейтинг
+            3 - страны
+            4 - описание
+            5 - ссылка на постер
+            6 - имя файла без расширения
+            7:17 - режиссер + 10 актеров 
     '''
 
     api_client = KinopoiskApiClient(api)
@@ -78,8 +81,12 @@ def getFilminfo(film_code, api):
     return filmlist + stafflist
 
 
-# заполнение таблицы в docx файле
 def writeFilmtoTable(current_table, filminfo):
+    '''
+    Заполнение таблицы в docx файле.
+    
+    '''
+
     paragraph = current_table.cell(0, 1).paragraphs[0]  # название фильма + рейтинг
     run = paragraph.add_run(str(filminfo[0]) + ' - ' + 'Кинопоиск ' + str(filminfo[2]))
     run.font.name = 'Arial'
@@ -190,7 +197,8 @@ def writeTagstoMp4(film):
 def resource_path(relative_path):
     '''
     Определение пути для запуска из автономного exe файла.
-    pyinstaller cоздает временную папку, путь в _MEIPASS
+    
+    Pyinstaller cоздает временную папку, путь в _MEIPASS.
     '''
 
     try:
@@ -231,6 +239,28 @@ def inputkinopoiskid(choice):
     elif choice == 2:
         inputstr = console.input('Введите через пробел идентификаторы фильмов ([b]kinopoisk id[/b]): ')
         return inputstr.split()
+    elif choice == 3:
+        filmsearch = []
+        mp4files = glob.glob('*.mp4')
+        if len(mp4files) < 1:
+            return filmsearch
+        for file in mp4files:
+            search = file[:-4]
+            print('Поиск:', search)
+            try:
+                movie_list = Movie.objects.search(search)
+            except Exception:
+                print('[red]Фильм не найден, возникла ошибка!')
+                continue
+            else:
+                if len(movie_list) < 1:
+                    print('Фильм не найден.')
+                    continue
+                id = str(movie_list[0].id)
+                print(f'{movie_list[0]}, kinopoisk id: {id}')
+                filmsearch.append(id)
+        return filmsearch
+        
 
 
 terminal_size = os.get_terminal_size().columns - 1
@@ -270,13 +300,16 @@ else:
     print('Файл "list.txt" не найден!')
     while True:
         choice = console.input(
-            '[white]Выберите режим: Поиск фильмов по названию ([b]1[/b]); ручной ввод kinopoisk_id ([b]2[/b]); [b]Enter[/b] чтобы выйти: '
+            '[white]Выберите режим: Поиск фильмов по названию ([b]1[/b]); ручной ввод kinopoisk_id ([b]2[/b]); поиск по mp4 файлам ([b]3[/b]); [b]Enter[/b] чтобы выйти: '
         )
         if choice == "1":
             film_codes = inputkinopoiskid(1)
             break
         elif choice == "2":
             film_codes = inputkinopoiskid(2)
+            break
+        elif choice == "3":
+            film_codes = inputkinopoiskid(3)
             break
         elif choice == "":
             print('')
@@ -292,6 +325,9 @@ else:
         with open('./list.txt', 'w') as f:
             f.write('\n'.join(film_codes))
         print('Файл "list.txt" сохранен.')
+
+print('')
+print('Начало создания списка.')
 
 err = 0
 fullfilmslist = []
