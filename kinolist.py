@@ -202,7 +202,12 @@ def resource_path(relative_path):
 def inputkinopoiskid(choice):
     if choice == 1:
         filmsearch = []
+        filmlistprint = []
         while True:
+            if len(filmlistprint) > 0:
+                print("В списке следующие фильмы:")
+                for i in range(len(filmlistprint)):
+                    print(f"{i+1}: {filmlistprint[i]}")
             search = console.input('Введите название фильма и год выпуска или [b]Enter[/b] чтобы продолжить: ')
             if search == '':
                 return filmsearch
@@ -223,6 +228,7 @@ def inputkinopoiskid(choice):
                 )
                 if choice_1 == '1':
                     filmsearch.append(id)
+                    filmlistprint.append(movie_list[0])
                 elif choice_1 == '2':
                     continue
                 elif choice_1 == '':
@@ -321,7 +327,7 @@ elif tablenum < 1:
 for i in range(tablenum):
     current_table = doc.tables[i]
     writeFilmtoTable(current_table, fullfilmslist[i])
-    print(f'{fullfilmslist[i][0]} - [green]ок')
+    print(f'[white]{fullfilmslist[i][0]} - [green]ок')
 
 try:
     doc.save('./list.docx')
