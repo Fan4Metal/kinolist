@@ -20,9 +20,9 @@ from rich.console import Console
 
 import config
 
-ver = '0.4.4'
+ver = '0.4.5'
 api = config.api_key
-console = Console()
+console = Console(highlight=False)
 
 
 def isapiok(api):
@@ -42,15 +42,15 @@ def getFilminfo(film_code, api):
     '''
     Получение информации о фильме с помощью kinopoisk_api_client
     
-    Элементы списка:    
-            0 - название фильма
-            1 - год
-            2 - рейтинг
-            3 - страны
-            4 - описание
-            5 - ссылка на постер
-            6 - имя файла без расширения
-            7:17 - режиссер + 10 актеров 
+            Элементы списка:    
+                    0 - название фильма
+                    1 - год
+                    2 - рейтинг
+                    3 - страны
+                    4 - описание
+                    5 - ссылка на постер
+                    6 - имя файла без расширения
+                    7:17 - режиссер + 10 актеров 
     '''
     api_client = KinopoiskApiClient(api)
     request_staff = StaffRequest(film_code)
@@ -136,7 +136,7 @@ def writeFilmtoTable(current_table, filminfo):
         with open(file_path, 'wb') as f:  # открываем файл для бинарной записи
             shutil.copyfileobj(resp.raw, f)
     else:
-        print(f'Не удалось загрузить постер ({image_url})')
+        console.print(f'Не удалось загрузить постер ({image_url})', highlight=True)
 
     # изменение размера постера
     image = Image.open(file_path)
@@ -161,7 +161,6 @@ def copy_table_after(table, paragraph):
     p.addnext(new_tbl)
 
 
-#
 def cloneFirstTable(document: Document, num):
     '''Клонирует первую таблицу в документе num раз'''
     template = document.tables[0]
@@ -175,7 +174,7 @@ def writeTagstoMp4(film):
     '''Запись тегов в файл mp4'''
     file_path = str(film[6] + '.mp4')
     if not os.path.isfile(file_path):
-        print(f'Ошибка: Файл "{file_path}" не найден!')
+        console.print(f'Ошибка: Файл "{file_path}" не найден!')
         return
     video = MP4(file_path)
     video.delete()  # удаление всех тегов
@@ -187,7 +186,7 @@ def writeTagstoMp4(film):
     with open(cover, "rb") as f:
         video["covr"] = [MP4Cover(f.read(), imageformat=MP4Cover.FORMAT_JPEG)]
     video.save()
-    print(file_path + ' - тег записан')
+    console.print(file_path + ' - [bright_green]тег записан[/bright_green]', highlight=True)
 
 
 def resource_path(relative_path):
@@ -210,26 +209,26 @@ def inputkinopoiskid(choice):
         filmlistprint = []
         while True:
             if len(filmlistprint) > 0:
-                print("В списке следующие фильмы:")
+                console.print("В списке следующие фильмы:")
                 for i in range(len(filmlistprint)):
-                    print(f"{i+1}: {filmlistprint[i]}")
+                    console.print(f"{i+1}: {filmlistprint[i]}")
             search = console.input('Введите название фильма и год выпуска или [b]Enter[/b] чтобы продолжить: ')
             if search == '':
                 return filmsearch
             try:
                 movie_list = Movie.objects.search(search)
             except Exception:
-                print('[red]Фильм не найден, возникла ошибка!')
+                console.print('[red]Фильм не найден, возникла ошибка!')
                 continue
             else:
                 if len(movie_list) < 1:
-                    print('Фильм не найден.')
+                    console.print('Фильм не найден.')
                     continue
                 id = str(movie_list[0].id)
-                print(f'[white]{movie_list[0]}')
-                print(f"[white]Kinopoisk_id: {id}")
+                console.print(f'{movie_list[0]}')
+                console.print(f"Kinopoisk_id: {id}")
                 choice_1 = console.input(
-                    '[white]Варианты: Добавить в список ([b]1[/b]), новый поиск ([b]2[/b]), закончить и продолжить ([b]Enter[/b]): '
+                    'Варианты: Добавить в список ([b]1[/b]), новый поиск ([b]2[/b]), закончить и продолжить ([b]Enter[/b]): '
                 )
                 if choice_1 == '1':
                     filmsearch.append(id)
@@ -248,29 +247,29 @@ def inputkinopoiskid(choice):
             return filmsearch
         for file in mp4files:
             search = file[:-4]
-            print('Поиск:', search)
+            console.print(f'Поиск: {search}...')
             try:
                 movie_list = Movie.objects.search(search)
             except Exception:
-                print('[red]Фильм не найден, возникла ошибка!')
+                console.print('[red]Фильм не найден, возникла ошибка!')
                 continue
             else:
                 if len(movie_list) < 1:
-                    print('Фильм не найден.')
+                    console.print('Фильм не найден.')
                     continue
                 id = str(movie_list[0].id)
-                print(f'Найден фильм {movie_list[0]}, kinopoisk id: {id}')
+                console.print(f'Найден фильм: [orange]{movie_list[0]}[/orange], kinopoisk id: {id}')
                 filmsearch.append(id)
         return filmsearch
 
 
 terminal_size = os.get_terminal_size().columns - 1
-print(
+console.print(
     Panel("Kinolist: Программа создания списка фильмов".center(terminal_size, " ") + '\n' +
           ver.center(terminal_size, " ")))
 
 if not isapiok(api):
-    print('[red]Ошибка API!')
+    console.print('[red]Ошибка API!')
     os.system('pause')
     sys.exit()
 
@@ -278,9 +277,9 @@ file_path = resource_path('template.docx')  # определяем путь до
 try:
     doc = Document(file_path)  # открываем шаблон
 except Exception:
-    print('[red]Ошибка! Не найден шаблон "template.docx". Список не создан.')
-    print('')
-    print('Работа программы завершена.')
+    console.print('[red]Ошибка! Не найден шаблон "template.docx". Список не создан.')
+    console.print('')
+    console.print('Работа программы завершена.')
     os.system('pause')
     sys.exit()
 
@@ -293,15 +292,15 @@ if os.path.isfile('./list.txt'):
     for line in lines:
         film_codes.append(line.strip())
     if len(film_codes) < 1:
-        print('В списке 0 фильмов. Работа программы завершена.')
+        console.print('В списке 0 фильмов. Работа программы завершена.')
         os.system('pause')
         sys.exit()
-    print(f'Найден файл "list.txt" (записей: {len(film_codes)})')
+    console.print(f'Найден файл "list.txt" (записей: {len(film_codes)})', highlight=True)
 else:
-    print('Файл "list.txt" не найден!')
+    console.print('Файл "list.txt" не найден!', highlight=True)
     while True:
         choice = console.input(
-            '[white]Выберите режим: Поиск фильмов по названию ([b]1[/b]); ручной ввод kinopoisk_id ([b]2[/b]); поиск по mp4 файлам ([b]3[/b]); [b]Enter[/b] чтобы выйти: '
+            'Выберите режим: Поиск фильмов по названию ([b]1[/b]); ручной ввод kinopoisk_id ([b]2[/b]); поиск по mp4 файлам ([b]3[/b]); [b]Enter[/b] чтобы выйти: '
         )
         if choice == "1":
             film_codes = inputkinopoiskid(1)
@@ -313,34 +312,34 @@ else:
             film_codes = inputkinopoiskid(3)
             break
         elif choice == "":
-            print('')
-            print('Работа программы завершена.')
+            console.print('')
+            console.print('Работа программы завершена.')
             os.system('pause')
             sys.exit()
 
     if len(film_codes) < 1:
-        print('В списке 0 фильмов. Работа программы завершена.')
+        console.print('В списке 0 фильмов. Работа программы завершена.')
         os.system('pause')
         sys.exit()
     else:
         with open('./list.txt', 'w') as f:
             f.write('\n'.join(film_codes))
-        print('Файл "list.txt" сохранен.')
+        console.print('Файл "list.txt" сохранен.', highlight=True)
 
-print('')
-print('Начало создания списка.')
+console.print('')
+console.print('Начало создания списка.')
 
 err = 0
 fullfilmslist = []
 for i in range(len(film_codes)):
     if i > 20:
-        print('[red]Ошибка! Достигнуто ограничение API - не больше 20 фильмов за раз.')
+        console.print('[red]Ошибка! Достигнуто ограничение API - не больше 20 фильмов за раз.')
         break
     try:
         filminfo = getFilminfo(film_codes[i], api)
         fullfilmslist.append(filminfo)
     except:
-        print(f'[bold]{film_codes[i]} - ошибка[/bold]')
+        console.print(f'[bold]{film_codes[i]} - ошибка[/bold]')
         err += 1
     else:
         continue
@@ -349,9 +348,9 @@ tablenum = len(fullfilmslist)
 if tablenum > 1:
     cloneFirstTable(doc, tablenum - 1)  # добавляем копии шаблонов таблиц
 elif tablenum < 1:
-    print('[red]Ошибка! Нет фильмов для записи. Список не создан.')
-    print('')
-    print('Работа программы завершена.')
+    console.print('[red]Ошибка! Нет фильмов для записи. Список не создан.')
+    console.print('')
+    console.print('Работа программы завершена.')
     os.system('pause')
     sys.exit()
 
@@ -359,44 +358,50 @@ elif tablenum < 1:
 for i in range(tablenum):
     current_table = doc.tables[i]
     writeFilmtoTable(current_table, fullfilmslist[i])
-    print(f'[white]{fullfilmslist[i][0]} - [green]ок')
+    console.print(f'{fullfilmslist[i][0]} - [bright_green]ок')
 
 try:
     doc.save('./list.docx')
 except PermissionError:
-    print('[red]Ошибка! Нет доступа к файлу "list.docx". Список не создан.')
-    print('')
-    print('Работа программы завершена.')
+    console.print('[red]Ошибка! Нет доступа к файлу "list.docx". Список не создан.')
+    console.print('')
+    console.print('Работа программы завершена.')
     os.system('pause')
     sys.exit()
 
 if err > 0:
-    print(f'[red]Выполнено с ошибками! ({err})')
-print('')
-print('Список создан.')
+    console.print(f'[red]Выполнено с ошибками! ({err})')
+console.print('')
+console.print('Список создан.')
 
 console.rule(style='white')
 
 mp4files = glob.glob('*.mp4')
 if len(mp4files) < 1:
-    print('Файлы mp4 не найдены.')
-    print('')
-    print('Работа программы завершена.')
+    console.print('Файлы mp4 не найдены.')
+    console.print('')
+    console.print('Работа программы завершена.')
     os.system('pause')
     sys.exit()
 
 # запись тегов
-print('Найдены файлы mp4:')
+console.print('Найдены файлы mp4:', highlight=True)
 for file in mp4files:
-    print(f'"{file}"')
+    console.print(f'"{file}"', )
 print('')
-ask = str(console.input('[white]Начать запись тегов? [b](y,1/n,2) '))
+ask = str(console.input('Начать запись тегов? [b](y,1/n,2) '))
 if ask.lower() == "y" or ask == "1":
     for film in fullfilmslist:
         writeTagstoMp4(film)
     print('')
-    print('Запись тегов завершена.')
+    console.print('Запись тегов завершена.')
 elif ask == '' or ask == 'n' or ask == '2':
-    print('Отмена. Работа программы завершена.')
+    console.print('Отмена. Работа программы завершена.')
+
+ask = str(console.input('Произвести очистку каталога (папка covers, list.txt)? [b](y,1/n,2) '))
+if ask.lower() == "y" or ask == "1":
+    os.remove("list.txt")
+    shutil.rmtree("./covers/")
+    console.print("Каталог очищен.")
 os.system('pause')
 sys.exit()
