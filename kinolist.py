@@ -20,13 +20,13 @@ from rich.console import Console
 
 import config
 
-ver = '0.4.3'
+ver = '0.4.4'
 api = config.api_key
 console = Console()
 
 
-# проверка авторизации
 def isapiok(api):
+    '''Проверка авторизации'''
     try:
         api_client = KinopoiskApiClient(api)
         request = FilmRequest(328)
@@ -36,19 +36,22 @@ def isapiok(api):
     else:
         return True
 
+
 # Получение информации о фильме по kinopoisk id
 def getFilminfo(film_code, api):
     '''
-    0 - название фильма
-    1 - год
-    2 - рейтинг
-    3 - страны
-    4 - описание
-    5 - ссылка на постер
-    6 - имя файла без расширения
-    7:17 - режиссер + 10 актеров 
+    Получение информации о фильме с помощью kinopoisk_api_client
+    
+    Элементы списка:    
+            0 - название фильма
+            1 - год
+            2 - рейтинг
+            3 - страны
+            4 - описание
+            5 - ссылка на постер
+            6 - имя файла без расширения
+            7:17 - режиссер + 10 актеров 
     '''
-
     api_client = KinopoiskApiClient(api)
     request_staff = StaffRequest(film_code)
     response_staff = api_client.staff.send_staff_request(request_staff)
@@ -77,8 +80,8 @@ def getFilminfo(film_code, api):
     return filmlist + stafflist
 
 
-# заполнение таблицы в docx файле
 def writeFilmtoTable(current_table, filminfo):
+    '''Заполнение таблицы в docx файле docx'''
     paragraph = current_table.cell(0, 1).paragraphs[0]  # название фильма + рейтинг
     run = paragraph.add_run(str(filminfo[0]) + ' - ' + 'Кинопоиск ' + str(filminfo[2]))
     run.font.name = 'Arial'
@@ -151,15 +154,16 @@ def writeFilmtoTable(current_table, filminfo):
     run.add_picture(file_path, width=Cm(7))
 
 
-# копирование таблицы в указанный параграф
 def copy_table_after(table, paragraph):
+    '''Копирование таблицы в указанный параграф'''
     tbl, p = table._tbl, paragraph._p
     new_tbl = deepcopy(tbl)
     p.addnext(new_tbl)
 
 
-# клонирует первую таблицу в документе num раз
+#
 def cloneFirstTable(document: Document, num):
+    '''Клонирует первую таблицу в документе num раз'''
     template = document.tables[0]
     paragraph = document.paragraphs[0]
     for i in range(num):
@@ -167,8 +171,8 @@ def cloneFirstTable(document: Document, num):
         paragraph = document.add_paragraph()
 
 
-# запись тегов в mp4 файл
 def writeTagstoMp4(film):
+    '''Запись тегов в файл mp4'''
     file_path = str(film[6] + '.mp4')
     if not os.path.isfile(file_path):
         print(f'Ошибка: Файл "{file_path}" не найден!')
@@ -189,9 +193,9 @@ def writeTagstoMp4(film):
 def resource_path(relative_path):
     '''
     Определение пути для запуска из автономного exe файла.
-    pyinstaller cоздает временную папку, путь в _MEIPASS
+    
+    Pyinstaller cоздает временную папку, путь в _MEIPASS.
     '''
-
     try:
         base_path = sys._MEIPASS
     except Exception:
@@ -200,6 +204,7 @@ def resource_path(relative_path):
 
 
 def inputkinopoiskid(choice):
+    '''Функция поиска kinopoisk id фильмов несколькими способами'''
     if choice == 1:
         filmsearch = []
         filmlistprint = []
@@ -236,6 +241,27 @@ def inputkinopoiskid(choice):
     elif choice == 2:
         inputstr = console.input('Введите через пробел идентификаторы фильмов ([b]kinopoisk id[/b]): ')
         return inputstr.split()
+    elif choice == 3:
+        filmsearch = []
+        mp4files = glob.glob('*.mp4')
+        if len(mp4files) < 1:
+            return filmsearch
+        for file in mp4files:
+            search = file[:-4]
+            print('Поиск:', search)
+            try:
+                movie_list = Movie.objects.search(search)
+            except Exception:
+                print('[red]Фильм не найден, возникла ошибка!')
+                continue
+            else:
+                if len(movie_list) < 1:
+                    print('Фильм не найден.')
+                    continue
+                id = str(movie_list[0].id)
+                print(f'Найден фильм {movie_list[0]}, kinopoisk id: {id}')
+                filmsearch.append(id)
+        return filmsearch
 
 
 terminal_size = os.get_terminal_size().columns - 1
@@ -275,13 +301,16 @@ else:
     print('Файл "list.txt" не найден!')
     while True:
         choice = console.input(
-            '[white]Выберите режим: Поиск фильмов по названию ([b]1[/b]); ручной ввод kinopoisk_id ([b]2[/b]); [b]Enter[/b] чтобы выйти: '
+            '[white]Выберите режим: Поиск фильмов по названию ([b]1[/b]); ручной ввод kinopoisk_id ([b]2[/b]); поиск по mp4 файлам ([b]3[/b]); [b]Enter[/b] чтобы выйти: '
         )
         if choice == "1":
             film_codes = inputkinopoiskid(1)
             break
         elif choice == "2":
             film_codes = inputkinopoiskid(2)
+            break
+        elif choice == "3":
+            film_codes = inputkinopoiskid(3)
             break
         elif choice == "":
             print('')
@@ -297,6 +326,9 @@ else:
         with open('./list.txt', 'w') as f:
             f.write('\n'.join(film_codes))
         print('Файл "list.txt" сохранен.')
+
+print('')
+print('Начало создания списка.')
 
 err = 0
 fullfilmslist = []
