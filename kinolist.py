@@ -22,7 +22,7 @@ import config
 
 ver = '0.4.5'
 api = config.api_key
-console = Console(highlight=False)
+console = Console()
 
 
 def isapiok(api):
@@ -211,7 +211,7 @@ def inputkinopoiskid(choice):
             if len(filmlistprint) > 0:
                 console.print("В списке следующие фильмы:")
                 for i in range(len(filmlistprint)):
-                    console.print(f"{i+1}: {filmlistprint[i]}")
+                    console.print(f"{i+1}: {filmlistprint[i]}", highlight=False)
             search = console.input('Введите название фильма и год выпуска или [b]Enter[/b] чтобы продолжить: ')
             if search == '':
                 return filmsearch
@@ -225,7 +225,7 @@ def inputkinopoiskid(choice):
                     console.print('Фильм не найден.')
                     continue
                 id = str(movie_list[0].id)
-                console.print(f'{movie_list[0]}')
+                console.print(f'{movie_list[0]}', highlight=True)
                 console.print(f"Kinopoisk_id: {id}")
                 choice_1 = console.input(
                     'Варианты: Добавить в список ([b]1[/b]), новый поиск ([b]2[/b]), закончить и продолжить ([b]Enter[/b]): '
@@ -263,6 +263,16 @@ def inputkinopoiskid(choice):
         return filmsearch
 
 
+def clean_and_exit():
+    ask = str(console.input('Произвести очистку каталога (папка covers, list.txt)? [white bold](y,1/n,2) '))
+    if ask.lower() == "y" or ask == "1":
+        os.remove("list.txt")
+        shutil.rmtree("./covers/")
+        console.print("Каталог очищен.")
+    os.system('pause')
+    sys.exit()
+
+
 terminal_size = os.get_terminal_size().columns - 1
 console.print(
     Panel("Kinolist: Программа создания списка фильмов".center(terminal_size, " ") + '\n' +
@@ -295,9 +305,9 @@ if os.path.isfile('./list.txt'):
         console.print('В списке 0 фильмов. Работа программы завершена.')
         os.system('pause')
         sys.exit()
-    console.print(f'Найден файл "list.txt" (записей: {len(film_codes)})', highlight=True)
+    console.print(f'Найден файл "list.txt" (записей: {len(film_codes)})')
 else:
-    console.print('Файл "list.txt" не найден!', highlight=True)
+    console.print('Файл "list.txt" не найден!')
     while True:
         choice = console.input(
             'Выберите режим: Поиск фильмов по названию ([b]1[/b]); ручной ввод kinopoisk_id ([b]2[/b]); поиск по mp4 файлам ([b]3[/b]); [b]Enter[/b] чтобы выйти: '
@@ -324,7 +334,7 @@ else:
     else:
         with open('./list.txt', 'w') as f:
             f.write('\n'.join(film_codes))
-        console.print('Файл "list.txt" сохранен.', highlight=True)
+        console.print('Файл "list.txt" сохранен.')
 
 console.print('')
 console.print('Начало создания списка.')
@@ -358,7 +368,7 @@ elif tablenum < 1:
 for i in range(tablenum):
     current_table = doc.tables[i]
     writeFilmtoTable(current_table, fullfilmslist[i])
-    console.print(f'{fullfilmslist[i][0]} - [bright_green]ок')
+    console.print(f'{fullfilmslist[i][0]} - [bright_green]ок', highlight=False)
 
 try:
     doc.save('./list.docx')
@@ -379,17 +389,14 @@ console.rule(style='white')
 mp4files = glob.glob('*.mp4')
 if len(mp4files) < 1:
     console.print('Файлы mp4 не найдены.')
-    console.print('')
-    console.print('Работа программы завершена.')
-    os.system('pause')
-    sys.exit()
+    clean_and_exit()
 
 # запись тегов
-console.print('Найдены файлы mp4:', highlight=True)
+console.print('Найдены файлы mp4:')
 for file in mp4files:
     console.print(f'"{file}"', )
 print('')
-ask = str(console.input('Начать запись тегов? [b](y,1/n,2) '))
+ask = str(console.input('Начать запись тегов? [white bold](y,1/n,2) '))
 if ask.lower() == "y" or ask == "1":
     for film in fullfilmslist:
         writeTagstoMp4(film)
@@ -398,10 +405,4 @@ if ask.lower() == "y" or ask == "1":
 elif ask == '' or ask == 'n' or ask == '2':
     console.print('Отмена. Работа программы завершена.')
 
-ask = str(console.input('Произвести очистку каталога (папка covers, list.txt)? [b](y,1/n,2) '))
-if ask.lower() == "y" or ask == "1":
-    os.remove("list.txt")
-    shutil.rmtree("./covers/")
-    console.print("Каталог очищен.")
-os.system('pause')
-sys.exit()
+clean_and_exit()
