@@ -41,8 +41,8 @@ def isapiok(api):
 def getFilminfo(film_code, api):
     '''
     Получение информации о фильме с помощью kinopoisk_api_client
-    
-            Элементы списка:    
+
+            Элементы списка:
                     0 - название фильма
                     1 - год
                     2 - рейтинг
@@ -50,7 +50,7 @@ def getFilminfo(film_code, api):
                     4 - описание
                     5 - ссылка на постер
                     6 - имя файла без расширения
-                    7:17 - режиссер + 10 актеров 
+                    7:17 - режиссер + 10 актеров
     '''
     api_client = KinopoiskApiClient(api)
     request_staff = StaffRequest(film_code)
@@ -128,7 +128,6 @@ def writeFilmtoTable(current_table, filminfo):
     image_url = filminfo[5]
     if not os.path.isdir("covers"):
         os.mkdir("covers")
-    filename = str(filminfo[6] + '.jpg')
     file_path = './covers/' + str(filminfo[6] + '.jpg')
     resp = requests.get(image_url, stream=True)
     if resp.status_code == 200:
@@ -136,7 +135,7 @@ def writeFilmtoTable(current_table, filminfo):
         with open(file_path, 'wb') as f:  # открываем файл для бинарной записи
             shutil.copyfileobj(resp.raw, f)
     else:
-        console.print(f'Не удалось загрузить постер ({image_url})', highlight=True)
+        console.print(f'Не удалось загрузить постер ({image_url})')
 
     # изменение размера постера
     image = Image.open(file_path)
@@ -181,18 +180,18 @@ def writeTagstoMp4(film):
     video["\xa9nam"] = film[0]  # title
     video["desc"] = film[4]  # description
     video["ldes"] = film[4]  # long description
-    video["\xa9day"] = str(film[1])  #year
+    video["\xa9day"] = str(film[1])  # year
     cover = './covers/' + str(film[6] + '.jpg')
     with open(cover, "rb") as f:
         video["covr"] = [MP4Cover(f.read(), imageformat=MP4Cover.FORMAT_JPEG)]
     video.save()
-    console.print(file_path + ' - [bright_green]тег записан[/bright_green]', highlight=True)
+    console.print(f'{file_path} - [bright_green]тег записан[/bright_green]')
 
 
 def resource_path(relative_path):
     '''
     Определение пути для запуска из автономного exe файла.
-    
+
     Pyinstaller cоздает временную папку, путь в _MEIPASS.
     '''
     try:
@@ -225,7 +224,7 @@ def inputkinopoiskid(choice):
                     console.print('Фильм не найден.')
                     continue
                 id = str(movie_list[0].id)
-                console.print(f'{movie_list[0]}', highlight=True)
+                console.print(f'{movie_list[0]}')
                 console.print(f"Kinopoisk_id: {id}")
                 choice_1 = console.input(
                     'Варианты: Добавить в список ([b]1[/b]), новый поиск ([b]2[/b]), закончить и продолжить ([b]Enter[/b]): '
@@ -394,7 +393,7 @@ if len(mp4files) < 1:
 # запись тегов
 console.print('Найдены файлы mp4:')
 for file in mp4files:
-    console.print(f'"{file}"', )
+    console.print(f'"{file}"')
 print('')
 ask = str(console.input('Начать запись тегов? [white bold](y,1/n,2) '))
 if ask.lower() == "y" or ask == "1":
