@@ -14,7 +14,6 @@ from kinopoisk_unofficial.request.staff.staff_request import StaffRequest
 from kinopoisk.movie import Movie  # api для поиска фильмов
 from mutagen.mp4 import MP4, MP4Cover  # работа тегами
 from PIL import Image  # работа с изображениями
-from rich import print
 from rich.panel import Panel
 from rich.console import Console
 from rich.columns import Columns
@@ -26,8 +25,8 @@ api = config.api_key
 console = Console()
 
 
-def isapiok(api):
-    '''Проверка авторизации'''
+def is_api_ok(api):
+    '''Проверка авторизации.'''
     try:
         api_client = KinopoiskApiClient(api)
         request = FilmRequest(328)
@@ -38,20 +37,20 @@ def isapiok(api):
         return True
 
 
-# Получение информации о фильме по kinopoisk id
-def getFilminfo(film_code, api):
+def get_film_info(film_code, api):
     '''
-    Получение информации о фильме с помощью kinopoisk_api_client
+    Получение информации о фильме с помощью kinopoisk_api_client.
 
-            Элементы списка:
-                    0 - название фильма
-                    1 - год
-                    2 - рейтинг
-                    3 - страны
-                    4 - описание
-                    5 - ссылка на постер
-                    6 - имя файла без расширения
-                    7:17 - режиссер + 10 актеров
+            Элементы списка:            
+                0 - название фильма на русском языке
+                1 - год
+                2 - рейтинг Кинопоиска
+                3 - список стран
+                4 - описание
+                5 - ссылка на постер
+                6 - имя файла без расширения
+                7 - режиссер
+             8:17 - 10 актеров
     '''
     api_client = KinopoiskApiClient(api)
     request_staff = StaffRequest(film_code)
@@ -81,8 +80,8 @@ def getFilminfo(film_code, api):
     return filmlist + stafflist
 
 
-def writeFilmtoTable(current_table, filminfo):
-    '''Заполнение таблицы в docx файле docx'''
+def write_film_to_table(current_table, filminfo):
+    '''Заполнение таблицы в файле docx.'''
     paragraph = current_table.cell(0, 1).paragraphs[0]  # название фильма + рейтинг
     run = paragraph.add_run(str(filminfo[0]) + ' - ' + 'Кинопоиск ' + str(filminfo[2]))
     run.font.name = 'Arial'
@@ -155,14 +154,14 @@ def writeFilmtoTable(current_table, filminfo):
 
 
 def copy_table_after(table, paragraph):
-    '''Копирование таблицы в указанный параграф'''
+    '''Копирование таблицы в указанный параграф.'''
     tbl, p = table._tbl, paragraph._p
     new_tbl = deepcopy(tbl)
     p.addnext(new_tbl)
 
 
-def cloneFirstTable(document: Document, num):
-    '''Клонирует первую таблицу в документе num раз'''
+def clone_first_table(document: Document, num):
+    '''Клонирует первую таблицу в документе num раз.'''
     template = document.tables[0]
     paragraph = document.paragraphs[0]
     for i in range(num):
@@ -170,8 +169,8 @@ def cloneFirstTable(document: Document, num):
         paragraph = document.add_paragraph()
 
 
-def writeTagstoMp4(film):
-    '''Запись тегов в файл mp4'''
+def write_tags_to_mp4(film):
+    '''Запись тегов в файл mp4.'''
     file_path = str(film[6] + '.mp4')
     if not os.path.isfile(file_path):
         console.print(f'Ошибка: Файл "{file_path}" не найден!')
@@ -189,7 +188,7 @@ def writeTagstoMp4(film):
     console.print(f'{file_path} - [bright_green]тег записан[/bright_green]')
 
 
-def resource_path(relative_path):
+def get_resource_path(relative_path):
     '''
     Определение пути для запуска из автономного exe файла.
 
@@ -202,8 +201,8 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
-def inputkinopoiskid(choice):
-    '''Функция поиска kinopoisk_id фильмов несколькими способами'''
+def input_kinopoisk_id(choice):
+    '''Функция поиска kinopoisk_id фильмов несколькими способами.'''
     if choice == 1:
         filmsearch = []
         filmlistprint = []
@@ -264,6 +263,11 @@ def inputkinopoiskid(choice):
 
 
 def clean_and_exit():
+    '''
+    Очищает каталог по запросу, встает на паузу и выходит.
+    
+    Удаляет каталог covers и файл list.txt.
+    '''
     ask = str(console.input('Произвести очистку каталога (папка covers, list.txt)? [white bold](y,1/n,2) '))
     if ask.lower() in ('y', '1', 'д'):
         os.remove("list.txt")
@@ -274,6 +278,7 @@ def clean_and_exit():
 
 
 def pause_and_exit(*phrases:str):
+    '''Выводит фразы из аргументов, встает на паузу и выходит.'''
     for phrase in phrases:
         console.print(phrase)
     os.system('pause')
@@ -285,11 +290,11 @@ console.print(
     Panel("Kinolist: Программа создания списка фильмов".center(terminal_size, " ") + '\n' +
           ver.center(terminal_size, " ")))
 
-if not isapiok(api):
+if not is_api_ok(api):
     console.print('[red]Ошибка API!')
     pause_and_exit()
 
-file_path = resource_path('template.docx')  # определяем путь до шаблона
+file_path = get_resource_path('template.docx')  # определяем путь до шаблона
 try:
     doc = Document(file_path)  # открываем шаблон
 except Exception:
@@ -313,13 +318,13 @@ else:
             'Выберите режим: Поиск фильмов по названию ([b]1[/b]); ручной ввод kinopoisk_id ([b]2[/b]); поиск по mp4 файлам ([b]3[/b]); [b]Enter[/b] чтобы выйти: '
         )
         if choice == "1":
-            film_codes = inputkinopoiskid(1)
+            film_codes = input_kinopoisk_id(1)
             break
         elif choice == "2":
-            film_codes = inputkinopoiskid(2)
+            film_codes = input_kinopoisk_id(2)
             break
         elif choice == "3":
-            film_codes = inputkinopoiskid(3)
+            film_codes = input_kinopoisk_id(3)
             break
         elif choice == "":
             pause_and_exit('', 'Работа программы завершена.')
@@ -341,7 +346,7 @@ for i in range(len(film_codes)):
         console.print('[red]Ошибка! Достигнуто ограничение API - не больше 20 фильмов за раз.')
         break
     try:
-        filminfo = getFilminfo(film_codes[i], api)
+        filminfo = get_film_info(film_codes[i], api)
         fullfilmslist.append(filminfo)
     except:
         console.print(f'[bold]{film_codes[i]} - ошибка[/bold]')
@@ -351,14 +356,14 @@ for i in range(len(film_codes)):
 
 tablenum = len(fullfilmslist)
 if tablenum > 1:
-    cloneFirstTable(doc, tablenum - 1)  # добавляем копии шаблонов таблиц
+    clone_first_table(doc, tablenum - 1)  # добавляем копии шаблонов таблиц
 elif tablenum < 1:
     pause_and_exit('[red]Ошибка! Нет фильмов для записи. Список не создан.', '', 'Работа программы завершена.')
 
 # запись информации в таблицы
 for i in range(tablenum):
     current_table = doc.tables[i]
-    writeFilmtoTable(current_table, fullfilmslist[i])
+    write_film_to_table(current_table, fullfilmslist[i])
     console.print(f'{fullfilmslist[i][0]} - [bright_green]ок', highlight=False)
 
 try:
@@ -386,8 +391,8 @@ print('')
 ask = str(console.input('Начать запись тегов? [white bold](y,1/n,2) ')).lower()
 if ask in ("y", "1"):
     for film in fullfilmslist:
-        writeTagstoMp4(film)
-    print('')
+        write_tags_to_mp4(film)
+    console.print('')
     console.print('Запись тегов завершена.')
 elif ask in ('', 'n', '2'):
     console.print('Отмена. Работа программы завершена.')
