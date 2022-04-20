@@ -17,6 +17,7 @@ from PIL import Image  # работа с изображениями
 from rich import print
 from rich.panel import Panel
 from rich.console import Console
+from rich.columns import Columns
 
 import config
 
@@ -202,15 +203,15 @@ def resource_path(relative_path):
 
 
 def inputkinopoiskid(choice):
-    '''Функция поиска kinopoisk id фильмов несколькими способами'''
+    '''Функция поиска kinopoisk_id фильмов несколькими способами'''
     if choice == 1:
         filmsearch = []
         filmlistprint = []
         while True:
             if len(filmlistprint) > 0:
                 console.print("В списке следующие фильмы:")
-                for i in range(len(filmlistprint)):
-                    console.print(f"{i+1}: {filmlistprint[i]}", highlight=False)
+                films_renderables = [Panel(str(film)) for film in filmlistprint]
+                console.print(Columns(films_renderables))
             search = console.input('Введите название фильма и год выпуска или [b]Enter[/b] чтобы продолжить: ')
             if search == '':
                 return filmsearch
@@ -224,14 +225,14 @@ def inputkinopoiskid(choice):
                     console.print('Фильм не найден.')
                     continue
                 id = str(movie_list[0].id)
-                console.print(f'{movie_list[0]}')
-                console.print(f"Kinopoisk_id: {id}")
+                console.print(f'[white bold]{movie_list[0]} (kinopoisk_id: {id})')
+                # console.print(f"Kinopoisk_id: {id}")
                 choice_1 = console.input(
                     'Варианты: Добавить в список ([b]1[/b]), новый поиск ([b]2[/b]), закончить и продолжить ([b]Enter[/b]): '
                 )
                 if choice_1 == '1':
                     filmsearch.append(id)
-                    filmlistprint.append(movie_list[0])
+                    filmlistprint.append(f"{movie_list[0].title}, {movie_list[0].year}")
                 elif choice_1 == '2':
                     continue
                 elif choice_1 == '':
@@ -264,10 +265,17 @@ def inputkinopoiskid(choice):
 
 def clean_and_exit():
     ask = str(console.input('Произвести очистку каталога (папка covers, list.txt)? [white bold](y,1/n,2) '))
-    if ask.lower() == "y" or ask == "1":
+    if ask.lower() in ('y', '1', 'д'):
         os.remove("list.txt")
         shutil.rmtree("./covers/")
         console.print("Каталог очищен.")
+    os.system('pause')
+    sys.exit()
+
+
+def pause_and_exit(*phrases:str):
+    for phrase in phrases:
+        console.print(phrase)
     os.system('pause')
     sys.exit()
 
@@ -279,18 +287,13 @@ console.print(
 
 if not isapiok(api):
     console.print('[red]Ошибка API!')
-    os.system('pause')
-    sys.exit()
+    pause_and_exit()
 
 file_path = resource_path('template.docx')  # определяем путь до шаблона
 try:
     doc = Document(file_path)  # открываем шаблон
 except Exception:
-    console.print('[red]Ошибка! Не найден шаблон "template.docx". Список не создан.')
-    console.print('')
-    console.print('Работа программы завершена.')
-    os.system('pause')
-    sys.exit()
+    pause_and_exit('[red]Ошибка! Не найден шаблон "template.docx". Список не создан.', '', 'Работа программы завершена.')
 
 # считываем значения из файла list.txt
 film_codes = []
@@ -301,9 +304,7 @@ if os.path.isfile('./list.txt'):
     for line in lines:
         film_codes.append(line.strip())
     if len(film_codes) < 1:
-        console.print('В списке 0 фильмов. Работа программы завершена.')
-        os.system('pause')
-        sys.exit()
+        pause_and_exit('В списке 0 фильмов. Работа программы завершена.')
     console.print(f'Найден файл "list.txt" (записей: {len(film_codes)})')
 else:
     console.print('Файл "list.txt" не найден!')
@@ -321,15 +322,10 @@ else:
             film_codes = inputkinopoiskid(3)
             break
         elif choice == "":
-            console.print('')
-            console.print('Работа программы завершена.')
-            os.system('pause')
-            sys.exit()
+            pause_and_exit('', 'Работа программы завершена.')
 
     if len(film_codes) < 1:
-        console.print('В списке 0 фильмов. Работа программы завершена.')
-        os.system('pause')
-        sys.exit()
+        pause_and_exit('В списке 0 фильмов. Работа программы завершена.')
     else:
         with open('./list.txt', 'w') as f:
             f.write('\n'.join(film_codes))
@@ -357,11 +353,7 @@ tablenum = len(fullfilmslist)
 if tablenum > 1:
     cloneFirstTable(doc, tablenum - 1)  # добавляем копии шаблонов таблиц
 elif tablenum < 1:
-    console.print('[red]Ошибка! Нет фильмов для записи. Список не создан.')
-    console.print('')
-    console.print('Работа программы завершена.')
-    os.system('pause')
-    sys.exit()
+    pause_and_exit('[red]Ошибка! Нет фильмов для записи. Список не создан.', '', 'Работа программы завершена.')
 
 # запись информации в таблицы
 for i in range(tablenum):
@@ -372,11 +364,7 @@ for i in range(tablenum):
 try:
     doc.save('./list.docx')
 except PermissionError:
-    console.print('[red]Ошибка! Нет доступа к файлу "list.docx". Список не создан.')
-    console.print('')
-    console.print('Работа программы завершена.')
-    os.system('pause')
-    sys.exit()
+    pause_and_exit('[red]Ошибка! Нет доступа к файлу "list.docx". Список не создан.', '', 'Работа программы завершена.')
 
 if err > 0:
     console.print(f'[red]Выполнено с ошибками! ({err})')
@@ -395,13 +383,13 @@ console.print('Найдены файлы mp4:')
 for file in mp4files:
     console.print(f'"{file}"')
 print('')
-ask = str(console.input('Начать запись тегов? [white bold](y,1/n,2) '))
-if ask.lower() == "y" or ask == "1":
+ask = str(console.input('Начать запись тегов? [white bold](y,1/n,2) ')).lower()
+if ask in ("y", "1"):
     for film in fullfilmslist:
         writeTagstoMp4(film)
     print('')
     console.print('Запись тегов завершена.')
-elif ask == '' or ask == 'n' or ask == '2':
+elif ask in ('', 'n', '2'):
     console.print('Отмена. Работа программы завершена.')
 
 clean_and_exit()
