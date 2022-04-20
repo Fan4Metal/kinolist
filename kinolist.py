@@ -20,7 +20,7 @@ from rich.columns import Columns
 
 import config
 
-ver = '0.4.5'
+ver = '0.4.6'
 api = config.api_key
 console = Console()
 
@@ -41,7 +41,7 @@ def get_film_info(film_code, api):
     '''
     Получение информации о фильме с помощью kinopoisk_api_client.
 
-            Элементы списка:            
+            Элементы списка:
                 0 - название фильма на русском языке
                 1 - год
                 2 - рейтинг Кинопоиска
@@ -265,29 +265,32 @@ def input_kinopoisk_id(choice):
 def clean_and_exit():
     '''
     Очищает каталог по запросу, встает на паузу и выходит.
-    
+
     Удаляет каталог covers и файл list.txt.
     '''
-    ask = str(console.input('Произвести очистку каталога (папка covers, list.txt)? [white bold](y,1/n,2) '))
+    ask = str(
+        console.input('[white not bold]Произвести очистку каталога (папка covers, list.txt)? [white bold](y,1/n,2) '))
     if ask.lower() in ('y', '1', 'д'):
         os.remove("list.txt")
         shutil.rmtree("./covers/")
         console.print("Каталог очищен.")
+    console.print("")
     os.system('pause')
     sys.exit()
 
 
-def pause_and_exit(*phrases:str):
+def pause_and_exit(*phrases: str):
     '''Выводит фразы из аргументов, встает на паузу и выходит.'''
     for phrase in phrases:
         console.print(phrase)
+    console.print("")
     os.system('pause')
     sys.exit()
 
 
 terminal_size = os.get_terminal_size().columns - 1
 console.print(
-    Panel("Kinolist: Программа создания списка фильмов".center(terminal_size, " ") + '\n' +
+    Panel("[u]Kinolist: Программа создания списка фильмов[/u]".center(terminal_size, " ") + '\n' +
           ver.center(terminal_size, " ")))
 
 if not is_api_ok(api):
@@ -298,7 +301,8 @@ file_path = get_resource_path('template.docx')  # определяем путь 
 try:
     doc = Document(file_path)  # открываем шаблон
 except Exception:
-    pause_and_exit('[red]Ошибка! Не найден шаблон "template.docx". Список не создан.', '', 'Работа программы завершена.')
+    pause_and_exit('[red]Ошибка! Не найден шаблон "template.docx". Список не создан.', '',
+                   'Работа программы завершена.')
 
 # считываем значения из файла list.txt
 film_codes = []
@@ -337,7 +341,7 @@ else:
         console.print('Файл "list.txt" сохранен.')
 
 console.print('')
-console.print('Начало создания списка.')
+console.print('Начало создания списка...')
 
 err = 0
 fullfilmslist = []
@@ -395,6 +399,6 @@ if ask in ("y", "1"):
     console.print('')
     console.print('Запись тегов завершена.')
 elif ask in ('', 'n', '2'):
-    console.print('Отмена. Работа программы завершена.')
+    console.print('Запись тегов отменена.')
 
 clean_and_exit()
