@@ -20,7 +20,7 @@ from rich.columns import Columns
 
 import config
 
-ver = '0.4.6'
+ver = '0.4.7'
 api = config.api_key
 console = Console()
 
@@ -201,6 +201,47 @@ def get_resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
+def find_kp_id(film, api):
+    """Gets list of kinopoisk ids for list of films
+
+    Args:
+        film_list (list): List of movie titles for search
+        api (string): Kinopoisk API token
+
+    Returns:
+        list: List of two elements:
+                 0. list of found kinopoisk ids
+                 1. list of items that have not been found
+    """
+    result = []
+    payload = {'keyword': film, 'page': 1}
+    headers = {'X-API-KEY': api, 'Content-Type': 'application/json'}
+    try:
+        r = requests.get('https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword',
+                            headers=headers,
+                            params=payload)
+        if r.status_code == 200:
+            resp_json = r.json()
+            if resp_json['searchFilmsCountResult'] == 0:
+                return result
+            else:
+                id = resp_json['films'][0]['filmId']
+                year = resp_json['films'][0]['year']
+                if 'nameRu' in resp_json['films'][0]:
+                    found_film = resp_json['films'][0]['nameRu']
+                else:
+                    found_film = resp_json['films'][0]['nameEn']
+                result.append(id)
+                result.append(f"{found_film} ({year})")
+        else:
+            console.print('Ошибка доступа к https://kinopoiskapiunofficial.tech')
+            return result
+    except Exception as e:
+        console.print("Exeption:", str(e))
+        return
+    return result
+
+
 def input_kinopoisk_id(choice):
     '''Функция поиска kinopoisk_id фильмов несколькими способами.'''
     if choice == 1:
@@ -215,17 +256,16 @@ def input_kinopoisk_id(choice):
             if search == '':
                 return filmsearch
             try:
-                movie_list = Movie.objects.search(search)
+                movie_list = find_kp_id(search, api)
             except Exception:
                 console.print('[red]Фильм не найден, возникла ошибка!')
                 continue
             else:
-                if len(movie_list) < 1:
+                if len(movie_list) == 0:
                     console.print('Фильм не найден.')
                     continue
-                id = str(movie_list[0].id)
-                console.print(f'[white bold]{movie_list[0]} (kinopoisk_id: {id})')
-                # console.print(f"Kinopoisk_id: {id}")
+                id = str(movie_list[0])
+                console.print(f'[white bold]{movie_list[1]} (kinopoisk_id: {id})')
                 choice_1 = console.input(
                     '''\
 Выберите режим: Добавить в список          ([b]1[/b]);
@@ -234,7 +274,7 @@ def input_kinopoisk_id(choice):
                 )
                 if choice_1 == '1':
                     filmsearch.append(id)
-                    filmlistprint.append(f"{movie_list[0].title}, {movie_list[0].year}")
+                    filmlistprint.append(f"{movie_list[1]}")
                 elif choice_1 == '2':
                     continue
                 elif choice_1 == '':
