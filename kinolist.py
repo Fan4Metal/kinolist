@@ -11,7 +11,6 @@ from docx.shared import Cm, Pt, RGBColor
 from kinopoisk_unofficial.kinopoisk_api_client import KinopoiskApiClient
 from kinopoisk_unofficial.request.films.film_request import FilmRequest
 from kinopoisk_unofficial.request.staff.staff_request import StaffRequest
-from kinopoisk.movie import Movie  # api для поиска фильмов
 from mutagen.mp4 import MP4, MP4Cover  # работа тегами
 from PIL import Image  # работа с изображениями
 from rich.panel import Panel
@@ -291,16 +290,16 @@ def input_kinopoisk_id(choice):
             search = file[:-4]
             console.print(f'Поиск: {search}')
             try:
-                movie_list = Movie.objects.search(search)
+                movie_list = find_kp_id(search, api)
             except Exception:
                 console.print('[red]Фильм не найден, возникла ошибка!')
                 continue
             else:
-                if len(movie_list) < 1:
+                if len(movie_list) == 0:
                     console.print('Фильм не найден.')
                     continue
-                id = str(movie_list[0].id)
-                console.print(f'Найден фильм: [bold white]{movie_list[0]}, kinopoisk id: {id}[/bold white]')
+                id = str(movie_list[0])
+                console.print(f'[white bold]{movie_list[1]} (kinopoisk_id: {id})')
                 filmsearch.append(id)
         return filmsearch
 

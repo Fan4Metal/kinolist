@@ -1,6 +1,5 @@
 python-docx
 kinopoisk-api-unofficial-client
-kinopoiskpy
 mutagen
 requests
 Pillow
